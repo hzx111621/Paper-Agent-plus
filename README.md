@@ -1,6 +1,6 @@
 <div align="center">
 
-# Paper-Agent
+# Paper-Agent++
 
 面向科研人员的智能论文检索、阅读、分析与综述写作工作台。
 
