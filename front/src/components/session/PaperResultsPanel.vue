@@ -72,7 +72,7 @@ async function exportFile(format: string) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `paper-agent-${format}`;
+    link.download = `Paper-Agent++-${format}`;
     link.click();
     URL.revokeObjectURL(url);
   } catch (error) { pushToast({ tone: "error", title: "导出失败", description: error instanceof Error ? error.message : "请稍后再试" }); }

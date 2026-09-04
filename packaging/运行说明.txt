@@ -1,6 +1,6 @@
-Paper-Agent Windows 运行说明
+Paper-Agent++ Windows 运行说明
 
-1. 双击 Paper-Agent.exe。
+1. 双击 Paper-Agent++.exe。
 2. 程序会自动打开浏览器，地址是 http://127.0.0.1:8000。
 3. 关闭 exe 弹出的黑色窗口，程序和本地网页服务会一起停止。
 4. 模型 API Key 在 config\model.json 中配置；论文来源密钥在 config\system.yaml 中配置。

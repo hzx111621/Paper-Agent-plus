@@ -1,8 +1,8 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot ".." )).Path
 $ReleaseRoot = Join-Path $ProjectRoot "release"
-$ReleaseDir = Join-Path $ReleaseRoot "Paper-Agent"
+$ReleaseDir = Join-Path $ReleaseRoot "Paper-Agent++"
 $BuildRoot = Join-Path $ProjectRoot "build\pyinstaller"
 
 # 中文说明：只允许清理项目目录下的 release，避免路径配置错误时误删其它目录。
@@ -59,7 +59,7 @@ $readmeSource = Join-Path $ProjectRoot "packaging\运行说明.txt"
 Copy-Item -LiteralPath $readmeSource -Destination (Join-Path $ReleaseDir "运行说明.txt") -Force
 
 Write-Host "[5/5] 检查输出文件..."
-$ExePath = Join-Path $ReleaseDir "Paper-Agent.exe"
+$ExePath = Join-Path $ReleaseDir "Paper-Agent++.exe"
 if (-not (Test-Path -LiteralPath $ExePath)) {
     throw "打包结束但没有找到 exe：$ExePath"
 }

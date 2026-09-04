@@ -44,7 +44,7 @@ exe = EXE(
     analysis.scripts,
     [],
     exclude_binaries=True,
-    name="Paper-Agent",
+    name="Paper-Agent++",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -58,5 +58,5 @@ coll = COLLECT(
     analysis.datas,
     strip=False,
     upx=False,
-    name="Paper-Agent",
+    name="Paper-Agent++",
 )

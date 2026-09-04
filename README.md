@@ -1,6 +1,6 @@
 <div align="center">
 
-# Paper-Agent
+# Paper-Agent++
 
 面向科研人员的智能论文检索、阅读、分析与综述写作工作台。
 
@@ -14,7 +14,7 @@
 
 ## 项目简介
 
-Paper-Agent 是一个本地运行的 AI 论文调研工具。用户可以从研究主题或具体论文题目开始，完成论文检索、相关性判断、全文阅读、研究分析和综述写作，并在浏览器工作台中查看每个阶段的进度与产物。
+Paper-Agent++ 是一个本地运行的 AI 论文调研工具。用户可以从研究主题或具体论文题目开始，完成论文检索、相关性判断、全文阅读、研究分析和综述写作，并在浏览器工作台中查看每个阶段的进度与产物。
 
 项目采用 FastAPI + Vue 3 + LangGraph 架构。后端负责检索、Agent 工作流和本地数据保存，前端负责会话工作台、论文结果列表、个人论文库、系统设置和账户管理。
 
@@ -225,8 +225,8 @@ powershell -ExecutionPolicy Bypass -File .\packaging\build_exe.ps1
 生成目录：
 
 ```text
-release\Paper-Agent\
-├── Paper-Agent.exe
+release\Paper-Agent++\
+├── Paper-Agent++.exe
 ├── config\
 ├── front\dist\
 ├── assets\
@@ -240,7 +240,7 @@ release\Paper-Agent\
 双击：
 
 ```text
-release\Paper-Agent\Paper-Agent.exe
+release\Paper-Agent++\Paper-Agent++.exe
 ```
 
 程序会自动打开浏览器并使用：
@@ -256,7 +256,7 @@ http://127.0.0.1:8000
 ## 项目结构
 
 ```text
-Paper-Agent/
+Paper-Agent++/
 ├── main.py                         # 开发环境启动入口
 ├── packaging/                      # Windows exe 入口、spec 和打包脚本
 ├── config/

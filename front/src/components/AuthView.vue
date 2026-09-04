@@ -47,7 +47,7 @@ function switchMode(nextMode: "login" | "register") {
       <div class="auth-brand">
         <img src="/university-emblem.jpeg" alt="华东理工大学校徽" />
         <div>
-          <span class="eyebrow">Papers Agents</span>
+          <span class="eyebrow">Paper-Agent++</span>
           <strong>Research Workspace</strong>
         </div>
       </div>

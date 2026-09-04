@@ -1487,7 +1487,7 @@ function handleError(error: unknown, title: string) {
     </template>
 
     <footer class="page-footer">
-      <span>Minimal control surface for papers agents runtime.</span>
+      <span>Minimal control surface for Paper-Agent++ runtime.</span>
       <span>{{ currentYear() }}</span>
     </footer>
   </section>

@@ -67,7 +67,7 @@ def create_app(
     if not isinstance(sessions_repo, SQLiteSessionRepository):
         raise TypeError("登录功能需要使用 SQLiteSessionRepository")
 
-    app = FastAPI(title="Papers Agents API")
+    app = FastAPI(title="Paper-Agent++ API")
     app.include_router(create_settings_router(settings_repo, sessions_repo))
     app.include_router(create_auth_router(sessions_repo))
     app.include_router(create_library_router(sessions_repo))

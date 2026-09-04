@@ -129,7 +129,7 @@ function statusLabel(status: SessionStatus) {
           <img src="/university-emblem.jpeg" alt="华东理工大学校徽" />
         </div>
         <div v-if="!collapsed" class="brand-copy">
-          <span class="eyebrow">Papers Agents</span>
+          <span class="eyebrow">Paper-Agent++</span>
           <strong>Console</strong>
         </div>
       </div>

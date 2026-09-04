@@ -33,7 +33,7 @@ def _open_browser() -> None:
 
 
 def main() -> None:
-    """启动打包版 Paper-Agent。"""
+    """启动打包版 Paper-Agent++。"""
 
     # 中文注释：所有相对路径都从 exe 同级目录计算，避免双击启动时使用了错误的工作目录。
     os.chdir(_application_root())
@@ -47,7 +47,7 @@ def main() -> None:
     browser_timer.daemon = True
     browser_timer.start()
 
-    logger.info("准备启动 Paper-Agent exe", extra={"host": "127.0.0.1", "port": 8000, "reload": False})
+    logger.info("准备启动 Paper-Agent++ exe", extra={"host": "127.0.0.1", "port": 8000, "reload": False})
     # 中文注释：exe 不需要开发环境的热重载；直接传入 app 对象也能避免
     # uvicorn 再次按字符串导入入口文件，从而减少打包后的导入问题。
     uvicorn.run(app, host="127.0.0.1", port=8000, reload=False, log_config=None)
