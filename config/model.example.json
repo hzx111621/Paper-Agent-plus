@@ -1,0 +1,47 @@
+{
+  "providers": {
+    "siliconflow_main": {
+      "backend": "siliconflow",
+      "api_key": "",
+      "api_key_env": "SILICONFLOW_API_KEY",
+      "api_base": "https://api.siliconflow.cn/v1",
+      "extra_headers": {},
+      "extra_body": {}
+    }
+  },
+  "agents": {
+    "default_agent": {
+      "label": "Default Agent",
+      "description": "负责论文摘要阅读、大纲规划与正文写作。",
+      "provider": "siliconflow_main",
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+      "temperature": 0.2,
+      "reasoning_effort": "none"
+    },
+    "luna_agent": {
+      "label": "Luna Agent",
+      "description": "负责拆分研究方向并生成英文检索式。",
+      "provider": "siliconflow_main",
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+      "temperature": 0.2,
+      "reasoning_effort": "none"
+    },
+    "solar_agent": {
+      "label": "Solar Agent",
+      "description": "负责子主题分析与全局综合分析。",
+      "provider": "siliconflow_main",
+      "model_name": "deepseek-ai/DeepSeek-V4-Flash",
+      "temperature": 0.2,
+      "reasoning_effort": "none"
+    }
+  },
+  "embedding_profiles": {
+    "default_embedding": {
+      "label": "Default Embedding",
+      "provider": "siliconflow_main",
+      "model_name": "BAAI/bge-m3",
+      "dimensions": null,
+      "batch_size": 32
+    }
+  }
+}
