@@ -18,6 +18,16 @@ Paper-Agent++ 是一个本地运行的 AI 论文调研工具。用户可以从�
 
 项目采用 FastAPI + Vue 3 + LangGraph 架构。后端负责检索、Agent 工作流和本地数据保存，前端负责会话工作台、论文结果列表、个人论文库、系统设置和账户管理。
 
+<p align="center">
+  <img src="docs/assets/paper-agent-plus-plus-overview.png" alt="Paper-Agent++ interface preview" width="100%" />
+</p>
+
+## About
+
+Paper-Agent++ is a local AI research workspace for discovering academic papers, reading full text, organizing literature, and generating evidence-based reviews. It supports title-focused paper search and topic exploration across multiple academic sources, including arXiv, OpenAlex, Semantic Scholar, IEEE Xplore, and Elsevier.
+
+**Topics:** `academic-research` `paper-search` `literature-review` `ai-research-assistant` `fastapi` `vue3` `langgraph` `python`
+
 ## 主要功能
 
 ### 论文检索
