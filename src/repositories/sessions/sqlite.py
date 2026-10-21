@@ -389,6 +389,16 @@ class SessionStoreBackend:
             )
         return self.get_user_paper(user_id, paper_id) or {}
 
+    def delete_user_paper(self, user_id: str, paper_id: str) -> bool:
+        """删除资料库中的一篇论文，不触碰历史会话记录。"""
+
+        with self._connection() as connection:
+            result = connection.execute(
+                "DELETE FROM user_paper WHERE user_id = ? AND paper_id = ?",
+                (user_id, paper_id),
+            )
+        return result.rowcount > 0
+
     def list_user_papers(
         self,
         user_id: str,
@@ -1141,6 +1151,11 @@ class SQLiteSessionRepository(SessionRepository):
         """更新论文状态、标签和笔记。"""
 
         return self.backend.update_user_paper(user_id, paper_id, patch)
+
+    def delete_user_paper(self, user_id: str, paper_id: str) -> bool:
+        """删除当前本机资料库的一篇论文记录。"""
+
+        return self.backend.delete_user_paper(user_id, paper_id)
 
     def list_user_papers(self, user_id: str, **filters: Any) -> tuple[list[JsonObject], int]:
         """分页读取当前账户的论文库。"""

@@ -48,7 +48,8 @@ class SearchIntent:
     excluded_terms: list[str] = field(default_factory=list)
     year_from: int | None = None
     year_to: int | None = None
-    max_results: int = 30
+    # 中文说明：关键词检索未填写篇数时默认返回 20 篇；题目检索会在构建意图时固定为 1 篇。
+    max_results: int = 20
     sources: list[str] = field(default_factory=list)
     exact_title: bool = False
     search_mode: Literal["paper", "topic"] = "topic"
@@ -284,6 +285,7 @@ class SearchAgent(BaseAgent):
         request = state["request"]
         constraints = dict(getattr(request, "constraints", {}) or {})
         topic = str(getattr(request, "topic", "")).strip()
+        search_mode = self._search_mode(request)
         manual_keywords = self._normalize_string_list(constraints.get("keywords"))
         if manual_keywords:
             plan_keywords = manual_keywords
@@ -298,14 +300,15 @@ class SearchAgent(BaseAgent):
             excluded_terms=self._normalize_string_list(constraints.get("excluded_terms")),
             year_from=self._coerce_optional_int(constraints.get("year_from")),
             year_to=self._coerce_optional_int(constraints.get("year_to")),
-            # 中文说明：检索总量和深度阅读量是两件事，检索仍保留 60 篇候选，
-            # 真正进入全文处理的数量由 read 节点的系统默认值或聊天设置决定。
-            max_results=self._coerce_positive_int(constraints.get("max_results"), default=60),
+            # 中文说明：按题目搜索只返回最匹配的一篇论文；按关键词搜索才允许用户指定返回篇数。
+            max_results=1
+            if search_mode == "paper"
+            else self._coerce_positive_int(constraints.get("max_results"), default=20),
             sources=self._normalize_string_list(constraints.get("sources")),
             # 中文说明：只有用户在检索设置中打开“精确匹配论文题目”时，
             # 搜索节点才会额外拿原始输入去查同名论文，避免普通主题检索被误当成题目检索。
-            exact_title=self._search_mode(request) == "paper",
-            search_mode=self._search_mode(request),
+            exact_title=search_mode == "paper",
+            search_mode=search_mode,
         )
 
     def _search_mode(self, request: Any) -> Literal["paper", "topic"]:

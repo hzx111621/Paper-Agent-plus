@@ -3,9 +3,10 @@ import { Download, ExternalLink, FileDown, FileText, Flag, Heart, LoaderCircle, 
 import { ref, watch } from "vue";
 
 import { exportSessionUrl, listSessionPapers, patchSessionPaper, reanalyzePaper, uploadPdf } from "../../api/library";
-import { authHeaders } from "../../api/auth";
+import { saveDownloadedFile } from "../../api/desktop";
 import { pushToast } from "../../stores/notifications";
 import type { PaperRecord } from "../../types/sessions";
+import PaperReadingDialog from "../PaperReadingDialog.vue";
 
 const props = defineProps<{ sessionKey: string; running: boolean }>();
 const emit = defineEmits<{ started: [payload: { run_id: string; stream_url: string }] }>();
@@ -17,6 +18,8 @@ const page = ref(1);
 const pages = ref(0);
 const total = ref(0);
 const loading = ref(false);
+const readingPaper = ref<PaperRecord | null>(null);
+const readingTab = ref<"reading" | "image">("reading");
 const fileInput = ref<HTMLInputElement | null>(null);
 
 watch(() => props.sessionKey, () => { page.value = 1; void load(); }, { immediate: true });
@@ -66,16 +69,28 @@ async function onFileChange(event: Event) {
 
 async function exportFile(format: string) {
   try {
-    const response = await fetch(exportSessionUrl(props.sessionKey, format), { headers: authHeaders() });
+    const response = await fetch(exportSessionUrl(props.sessionKey, format));
     if (!response.ok) throw new Error("导出请求失败");
     const blob = await response.blob();
+    if (!blob.size) throw new Error("当前没有可导出的内容");
+    const disposition = response.headers.get("Content-Disposition") || "";
+    const filename = disposition.match(/filename=\"?([^\";]+)\"?/i)?.[1] || `paper-agent.${format === "bibtex" ? "bib" : format}`;
+    if (await saveDownloadedFile(filename, blob)) {
+      pushToast({ tone: "success", title: "导出完成", description: `已保存 ${filename}` });
+      return;
+    }
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Paper-Agent++-${format}`;
+    link.download = filename;
     link.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch (error) { pushToast({ tone: "error", title: "导出失败", description: error instanceof Error ? error.message : "请稍后再试" }); }
+}
+
+/** Google Scholar 没有稳定的公开批量接口，因此先把当前论文标题交给用户在网页中核对。 */
+function googleScholarUrl(paper: PaperRecord): string {
+  return `https://scholar.google.com/scholar?q=${encodeURIComponent(paper.title)}`;
 }
 </script>
 
@@ -104,9 +119,12 @@ async function exportFile(format: string) {
           <p class="paper-meta">{{ paper.authors.join('、') || '作者未知' }} · {{ paper.year || '年份未知' }} · {{ paper.source || '来源未知' }}</p>
           <p class="paper-abstract">{{ paper.abstract || '暂无摘要' }}</p>
           <div class="paper-result-buttons">
+            <button class="button secondary compact" :disabled="running" @click="readingTab = 'reading'; readingPaper = paper">逐章精读</button>
+            <button class="button secondary compact" :disabled="running" @click="readingTab = 'image'; readingPaper = paper">一图总结</button>
             <button class="icon-button" type="button" :aria-label="paper.favorite ? '取消收藏' : '收藏论文'" @click="update(paper, { favorite: !paper.favorite })"><Heart :size="15" :fill="paper.favorite ? 'currentColor' : 'none'" /></button>
             <button class="icon-button" type="button" :aria-label="paper.focused ? '取消重点阅读' : '标记重点阅读'" @click="update(paper, { focused: !paper.focused })"><Flag :size="15" :fill="paper.focused ? 'currentColor' : 'none'" /></button>
             <button class="button tertiary compact" type="button" :disabled="running" @click="startReanalysis(paper)"><RefreshCw :size="14" />重新分析</button>
+            <a class="button tertiary compact" :href="googleScholarUrl(paper)" target="_blank" rel="noreferrer">Google Scholar</a>
             <a
               v-if="paper.pdf_url || paper.url"
               class="button secondary compact"
@@ -123,4 +141,5 @@ async function exportFile(format: string) {
     </div>
     <div class="paper-pagination"><button class="button secondary compact" :disabled="page <= 1" @click="page -= 1; load()">上一页</button><span>第 {{ page }} / {{ pages || 1 }} 页</span><button class="button secondary compact" :disabled="page >= pages" @click="page += 1; load()">下一页</button></div>
   </section>
+  <PaperReadingDialog v-if="readingPaper" :paper="readingPaper" :initial-tab="readingTab" @close="readingPaper = null" />
 </template>

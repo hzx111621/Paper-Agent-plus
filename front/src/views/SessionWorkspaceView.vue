@@ -43,9 +43,8 @@ const selectedSessionKey = ref("");
 const selectedTitle = ref("新的研究主题");
 const selectedRunStartedAt = ref<string | null>(null);
 const draft = ref("");
-// 中文说明：新会话默认开启精确题目检索，让用户直接粘贴论文标题时能优先找到同名论文。
-// 需要做宽泛研究方向检索时，可以在输入框下方的检索设置里关闭它。
-const constraints = ref<SessionConstraints>({ search_mode: "paper" });
+// 中文说明：首页默认按关键词检索，方便一次返回多篇相关论文；用户需要找某篇指定论文时再切换到“搜论文”。
+const constraints = ref<SessionConstraints>({ search_mode: "topic", max_results: 20 });
 const threadLoading = ref(false);
 const sending = ref(false);
 const cancelling = ref(false);
@@ -223,7 +222,7 @@ async function selectSession(sessionKey: string) {
   activeRunId.value = null;
   cancelling.value = false;
   selectedSessionKey.value = sessionKey;
-  constraints.value = { search_mode: "paper" };
+  constraints.value = { search_mode: "topic", max_results: 20 };
   threadLoading.value = true;
   try {
     const thread = await fetchSessionThread(sessionKey);
@@ -258,7 +257,7 @@ function resetToBlankWorkspace() {
   closeStream(true);
   selectedSessionKey.value = "";
   selectedTitle.value = "新的研究主题";
-  constraints.value = { search_mode: "paper" };
+  constraints.value = { search_mode: "topic", max_results: 20 };
   selectedRunStartedAt.value = null;
   timelineSnapshot.value = null;
   sending.value = false;
@@ -274,6 +273,14 @@ async function submitTopic() {
     return;
   }
 
+  // 中文说明：只有关键词检索需要用户决定返回篇数；按题目检索由后端固定返回最匹配的一篇。
+  const isTopicSearch = constraints.value.search_mode === "topic";
+  const maxResults = Number(constraints.value.max_results);
+  if (isTopicSearch && (!Number.isInteger(maxResults) || maxResults < 1 || maxResults > 200)) {
+    pushToast({ tone: "error", title: "请填写搜索篇数", description: "请填写 1 到 200 之间的最多返回篇数。" });
+    return;
+  }
+
   sending.value = true;
   const submittedContent = content;
   draft.value = "";
@@ -286,7 +293,7 @@ async function submitTopic() {
     const accepted = await startSessionRun(sessionKey, {
       content: submittedContent,
       turn_id: turnId,
-      constraints: { ...constraints.value },
+      constraints: { ...constraints.value, max_results: isTopicSearch ? maxResults : 1 },
     });
     emit("refreshSessions");
     activeRunId.value = accepted.run_id;
@@ -554,6 +561,7 @@ function handleError(error: unknown, title: string) {
             v-if="shouldShowWelcomeComposer"
             v-model="draft"
             variant="welcome"
+            :ensure-session="ensureActiveSession"
             heading="今天想探索什么研究方向？"
             helper-text="输入论文主题、研究问题或调研任务，系统会自动创建会话并展开执行时间线。"
             placeholder="例如：多智能体论文写作系统的研究现状与关键挑战"
@@ -596,6 +604,7 @@ function handleError(error: unknown, title: string) {
 
         <SessionComposer
           v-if="!shouldShowWelcomeComposer"
+          :ensure-session="ensureActiveSession"
           v-model="draft"
           :running="isRunning"
           :sending="sending || props.creatingSession"

@@ -3,14 +3,11 @@ import { AlertCircle, LoaderCircle } from "lucide-vue-next";
 import { computed, onMounted, ref, watch } from "vue";
 import { RouterView, useRoute, useRouter } from "vue-router";
 
-import { clearAuthToken, getAuthToken, getCurrentUser, logoutAccount } from "./api/auth";
 import { createSession, deleteSession, listSessions } from "./api/sessions";
 import { archiveSession, renameSession } from "./api/library";
 import AppSidebar from "./components/AppSidebar.vue";
-import AuthView from "./components/AuthView.vue";
 import ToastStack from "./components/ToastStack.vue";
 import { pushToast } from "./stores/notifications";
-import type { AuthUser } from "./types/auth";
 import type { SessionSummary } from "./types/sessions";
 
 const route = useRoute();
@@ -23,8 +20,6 @@ const creatingSession = ref(false);
 const selectedSessionKey = ref("");
 const pendingRemovalSession = ref<SessionSummary | null>(null);
 const deletingSession = ref(false);
-const authLoading = ref(true);
-const currentUser = ref<AuthUser | null>(null);
 
 const workspaceBindings = computed(() => ({
   sessions: sessions.value,
@@ -38,45 +33,8 @@ watch(sidebarCollapsed, (value) => {
   localStorage.setItem("pa.sidebar.collapsed", value ? "1" : "0");
 });
 
-onMounted(async () => {
-  const token = getAuthToken();
-  if (!token) {
-    authLoading.value = false;
-    return;
-  }
-
-  try {
-    const payload = await getCurrentUser();
-    currentUser.value = payload.user;
-    await refreshSessions(true);
-  } catch {
-    clearAuthToken();
-  } finally {
-    authLoading.value = false;
-  }
-});
-
-async function handleAuthenticated(user: AuthUser) {
-  currentUser.value = user;
-  await refreshSessions(true);
-}
-
-async function handleLogout() {
-  try {
-    await logoutAccount();
-  } catch (error) {
-    pushToast({
-      tone: "error",
-      title: "退出登录失败",
-      description: error instanceof Error ? error.message : "请稍后再试",
-    });
-    return;
-  }
-  currentUser.value = null;
-  sessions.value = [];
-  selectedSessionKey.value = "";
-  await router.replace({ name: "sessions" });
-}
+// 中文说明：桌面版启动后直接读取本机的历史记录，不再显示登录或注册页面。
+onMounted(() => { void refreshSessions(true); });
 
 /**
  * 中文注释：从后端重新读取历史会话列表。
@@ -228,26 +186,19 @@ function handleError(error: unknown, title: string) {
 </script>
 
 <template>
-  <main v-if="authLoading" class="auth-loading">
-    <LoaderCircle class="spinning" :size="24" />
-    <span>正在确认登录状态...</span>
-  </main>
-  <AuthView v-else-if="!currentUser" @authenticated="handleAuthenticated" />
-  <div v-else class="app-shell" :data-collapsed="sidebarCollapsed">
+  <div class="app-shell" :data-collapsed="sidebarCollapsed">
     <AppSidebar
       :collapsed="sidebarCollapsed"
       :sessions="sessions"
       :selected-key="selectedSessionKey"
       :loading-sessions="sessionsLoading"
       :creating-session="creatingSession"
-      :current-user="currentUser"
       @toggle="sidebarCollapsed = !sidebarCollapsed"
       @create-session="createNewSession"
       @select-session="selectSession"
       @remove-session="requestSessionRemoval"
       @rename-session="handleRenameSession"
       @archive-session="handleArchiveSession"
-      @logout="handleLogout"
     />
     <main class="app-main">
       <RouterView v-slot="{ Component }">

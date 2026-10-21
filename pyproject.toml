@@ -12,5 +12,7 @@ dependencies = [
     "langgraph>=1.2.6",
     "openai>=2.43.0",
     "pypdf>=5.0.0",
+    "pystray>=0.19.5",
+    "pywebview>=6.0",
     "uvicorn>=0.35.0",
 ]

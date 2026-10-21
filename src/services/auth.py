@@ -56,16 +56,21 @@ def login(repo: SQLiteSessionRepository, username: str, password: str) -> JsonOb
 
 
 def current_user(repo: SQLiteSessionRepository, request: Request) -> JsonObject:
-    """从 Authorization 请求头读取当前账户，没有有效登录时返回 401。"""
+    """返回桌面版唯一的本机用户，不再要求登录令牌。
 
-    authorization = request.headers.get("Authorization", "")
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token.strip():
-        raise SessionError("请先登录", 401)
-    user = repo.find_user_by_token(_token_hash(token.strip()))
+    中文说明：软件是安装在个人电脑上的单用户工具，登录会让首次使用多一步，
+    也会让下载、导出和实时进度因为令牌失效而中断。数据库仍沿用原来的用户字段，
+    这里只在首次启动时创建一个固定的本机记录，让会话和论文资料库继续有稳定归属。
+    """
+
+    del request
+    user = repo.find_user_by_id("local-user")
     if user is None:
-        raise SessionError("登录已失效，请重新登录", 401)
-    return {"id": str(user["id"]), "username": str(user["username"])}
+        repo.register_user("local-user", "本机用户", "")
+        user = repo.find_user_by_id("local-user")
+    if user is None:
+        raise SessionError("无法创建本机数据目录", 500)
+    return {"id": "local-user", "username": "本机用户"}
 
 
 def logout(repo: SQLiteSessionRepository, request: Request) -> None:

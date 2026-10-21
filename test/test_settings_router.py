@@ -43,8 +43,8 @@ class SettingsFastApiTest(unittest.TestCase):
         repo = SettingsRepository(
             initial={
                 "providers": {
-                    "openai": {"api_key": "test-openai-key", "api_base": "https://api.openai.com/v1"},
-                    "anthropic_compat": {"api_key": "test-anthropic-key", "api_base": "https://proxy.example/v1"},
+                    "openai": {"api_key": "sk-test", "api_base": "https://api.openai.com/v1"},
+                    "anthropic_compat": {"api_key": "ak-test", "api_base": "https://proxy.example/v1"},
                 },
                 "agents": {
                     "default_agent": {

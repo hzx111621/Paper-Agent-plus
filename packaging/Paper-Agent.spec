@@ -11,12 +11,16 @@ PROJECT_ROOT = PACKAGING_DIR.parent
 # 中文说明：项目中的 Agent、路由和工作流有一部分是间接导入的，
 # 因此把 src 下的 Python 子模块显式收集，避免 exe 运行到某个功能时才发现模块缺失。
 hiddenimports = collect_submodules("src")
-datas = []
+datas = [
+    (str(PROJECT_ROOT / "front" / "dist"), "front/dist"),
+    (str(PACKAGING_DIR / "defaults" / "model.json"), "packaging/defaults"),
+    (str(PACKAGING_DIR / "defaults" / "system.yaml"), "packaging/defaults"),
+]
 binaries = []
 
 # 中文说明：这些依赖包含动态加载的子模块或运行时资源。收集它们的完整运行文件，
 # 可以让检索、全文阅读、向量库和模型调用在 exe 中保持与开发环境一致。
-for package_name in ("chromadb", "langgraph", "fastapi", "uvicorn", "openai", "anthropic", "pypdf"):
+for package_name in ("chromadb", "langgraph", "fastapi", "uvicorn", "openai", "anthropic", "pypdf", "pystray", "webview"):
     package_datas, package_binaries, package_hiddenimports = collect_all(package_name)
     datas.extend(package_datas)
     binaries.extend(package_binaries)
@@ -37,26 +41,17 @@ analysis = Analysis(
 
 pyz = PYZ(analysis.pure)
 
-# 中文说明：EXE 只负责生成启动文件，真正的依赖文件由 COLLECT 放到同一个目录，
-# 这样 config、data、logs 和前端静态文件可以清楚地放在 exe 旁边。
+# 页面、干净配置和依赖全部放进一个 EXE，分享时只需要发送这一个文件。
 exe = EXE(
     pyz,
     analysis.scripts,
-    [],
-    exclude_binaries=True,
-    name="Paper-Agent++",
+    analysis.binaries,
+    analysis.datas,
+    name="Paper-Agent-Hohai",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
-    console=True,
-)
-
-coll = COLLECT(
-    exe,
-    analysis.binaries,
-    analysis.datas,
-    strip=False,
-    upx=False,
-    name="Paper-Agent++",
+    console=False,
+    icon=str(PACKAGING_DIR / "hohai.ico"),
 )

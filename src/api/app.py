@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 import time
 import uuid
 from dataclasses import dataclass
@@ -19,7 +20,6 @@ from src.services.sessions import MessageHandler, SessionError
 from src.utils import get_logger, logging_context, setup_logging
 
 from .routers.sessions import create_sessions_router
-from .routers.auth import create_auth_router
 from .routers.settings import create_settings_router
 from .routers.library import create_library_router
 
@@ -65,15 +65,15 @@ def create_app(
     run_service = SessionRunService(repo=sessions_repo, message_handler=message_handler)
 
     if not isinstance(sessions_repo, SQLiteSessionRepository):
-        raise TypeError("登录功能需要使用 SQLiteSessionRepository")
+        raise TypeError("桌面版数据存储需要使用 SQLiteSessionRepository")
 
-    app = FastAPI(title="Paper-Agent++ API")
+    app = FastAPI(title="Papers Agents API")
     app.include_router(create_settings_router(settings_repo, sessions_repo))
-    app.include_router(create_auth_router(sessions_repo))
-    app.include_router(create_library_router(sessions_repo))
+    app.include_router(create_library_router(sessions_repo, settings_repo))
     app.include_router(
         create_sessions_router(
             sessions_repo,
+            settings=settings_repo,
             message_handler=message_handler,
             run_service=run_service,
         )
@@ -146,7 +146,7 @@ def create_app(
                 "sse_streaming": True,
                 "multi_chat_socket": False,
                 "settings_snapshot": True,
-                "auth_required": True,
+                "auth_required": False,
             },
         }
 
@@ -165,7 +165,9 @@ def create_app(
 def _mount_frontend(app: FastAPI) -> None:
     """挂载前端构建产物，并保留 SPA 路由回退能力。"""
 
-    dist_dir = Path("front/dist")
+    # 单文件 EXE 的页面位于临时解压目录，配置和数据仍从程序所在目录读取。
+    resource_root = Path(sys._MEIPASS) if getattr(sys, "frozen", False) else Path.cwd()
+    dist_dir = resource_root / "front" / "dist"
     index_file = dist_dir / "index.html"
     assets_dir = dist_dir / "assets"
 

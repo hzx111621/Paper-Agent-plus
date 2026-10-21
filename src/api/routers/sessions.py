@@ -19,6 +19,8 @@ from src.services.sessions import (
     submit_message,
 )
 from src.services.library import export_session, list_session_papers, update_paper, upload_pdf
+from src.repositories.settings.json import SettingsRepository
+from src.services.paper_reading import prefetch_paper_fulltext
 
 
 JsonObject = dict[str, Any]
@@ -26,6 +28,7 @@ JsonObject = dict[str, Any]
 
 def create_sessions_router(
     repo: SQLiteSessionRepository,
+    settings: SettingsRepository | None = None,
     message_handler: MessageHandler | None = None,
     run_service: SessionRunService | None = None,
 ) -> APIRouter:
@@ -70,7 +73,7 @@ def create_sessions_router(
 
         user = current_user(repo, request)
         params = request.query_params
-        return list_session_papers(
+        payload = list_session_papers(
             repo,
             session_key,
             str(user["id"]),
@@ -80,6 +83,13 @@ def create_sessions_router(
             page=int(params.get("page") or 1),
             page_size=int(params.get("page_size") or 20),
         )
+        # 中文说明：只有结果恰好为一篇时，提前准备它的公开全文，
+        # 用户随后点“逐章精读”时会直接读取缓存，不再把“没有本地文件”当成错误。
+        if settings is not None and payload["total"] == 1 and payload["papers"]:
+            warning = await prefetch_paper_fulltext(settings, payload["papers"][0])
+            if warning:
+                payload["fulltext_warning"] = warning
+        return payload
 
     @router.patch("/{session_key}/papers/{paper_id}")
     async def patch_session_paper(session_key: str, paper_id: str, request: Request) -> JsonObject:

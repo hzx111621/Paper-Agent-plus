@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from src.repositories.sessions.sqlite import SQLiteSessionRepository
 from src.repositories.settings.json import SettingsRepository
 from src.services.auth import current_user
+from src.llm.image_generation import image_settings_payload, save_image_settings
 from src.services.settings import (
     SettingsError,
     async_model_connectivity_payload,
@@ -35,6 +36,18 @@ def create_settings_router(repo: SettingsRepository, auth_repo: SQLiteSessionRep
     """
 
     router = APIRouter(prefix="/api/settings", tags=["settings"])
+
+    @router.get("/image-generation")
+    async def get_image_settings(request: Request) -> JsonObject:
+        """返回生图配置和官方文档中的模型候选，不回传密钥。"""
+        _require_user(auth_repo, request)
+        return image_settings_payload(repo)
+
+    @router.put("/image-generation")
+    async def put_image_settings(request: Request) -> JsonObject:
+        """保存用户自己的生图服务配置。"""
+        _require_user(auth_repo, request)
+        return save_image_settings(repo, await _json_body(request))
 
     @router.get("")
     async def get_settings(request: Request) -> JsonObject:

@@ -1,11 +1,10 @@
 import type { PaperRecord } from "../types/sessions";
-import { authHeaders } from "./auth";
 
 type PaperListPayload = { papers: PaperRecord[]; total: number; page: number; page_size: number; pages: number; stats?: { searched: number; selected: number; read_success: number; read_failed: number } };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
-    headers: { "Content-Type": "application/json", ...authHeaders(), ...(init?.headers ?? {}) },
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
     ...init,
   });
   const data = (await response.json().catch(() => ({}))) as { error?: { message?: string }; detail?: string } & T;
@@ -29,8 +28,17 @@ export function listLibrary(params: Record<string, string | number | boolean | u
   return request<PaperListPayload>(`/api/library${suffix ? `?${suffix}` : ""}`);
 }
 
+// 直接搜索在线论文来源；只有用户选择某篇论文后才继续读取全文和生图。
+export function searchImagePapers(query: string) {
+  return request<{ papers: PaperRecord[]; unavailable_sources: string[] }>("/api/library/search", { method: "POST", body: JSON.stringify({ query }) });
+}
+
 export function patchPaper(paperId: string, patch: Partial<PaperRecord>) {
   return request<{ paper: PaperRecord }>(`/api/library/${encodeURIComponent(paperId)}`, { method: "PATCH", body: JSON.stringify(patch) });
+}
+
+export function deletePaper(paperId: string) {
+  return request<{ deleted: boolean; paper_id: string }>(`/api/library/${encodeURIComponent(paperId)}`, { method: "DELETE" });
 }
 
 export function patchSessionPaper(sessionKey: string, paperId: string, patch: Partial<PaperRecord>) {

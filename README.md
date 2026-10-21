@@ -1,6 +1,6 @@
 <div align="center">
 
-# Paper-Agent++
+# Paper-Agent
 
 面向科研人员的智能论文检索、阅读、分析与综述写作工作台。
 
@@ -14,19 +14,9 @@
 
 ## 项目简介
 
-Paper-Agent++ 是一个本地运行的 AI 论文调研工具。用户可以从研究主题或具体论文题目开始，完成论文检索、相关性判断、全文阅读、研究分析和综述写作，并在浏览器工作台中查看每个阶段的进度与产物。
+Paper-Agent 是一个本地运行的 AI 论文调研工具。用户可以从研究主题或具体论文题目开始，完成论文检索、相关性判断、全文阅读、研究分析和综述写作，并在浏览器工作台中查看每个阶段的进度与产物。
 
 项目采用 FastAPI + Vue 3 + LangGraph 架构。后端负责检索、Agent 工作流和本地数据保存，前端负责会话工作台、论文结果列表、个人论文库、系统设置和账户管理。
-
-<p align="center">
-  <img src="docs/assets/paper-agent-plus-plus-overview.png" alt="Paper-Agent++ interface preview" width="100%" />
-</p>
-
-## About
-
-Paper-Agent++ is a local AI research workspace for discovering academic papers, reading full text, organizing literature, and generating evidence-based reviews. It supports title-focused paper search and topic exploration across multiple academic sources, including arXiv, OpenAlex, Semantic Scholar, IEEE Xplore, and Elsevier.
-
-**Topics:** `academic-research` `paper-search` `literature-review` `ai-research-assistant` `fastapi` `vue3` `langgraph` `python`
 
 ## 主要功能
 
@@ -235,8 +225,8 @@ powershell -ExecutionPolicy Bypass -File .\packaging\build_exe.ps1
 生成目录：
 
 ```text
-release\Paper-Agent++\
-├── Paper-Agent++.exe
+release\Paper-Agent\
+├── Paper-Agent.exe
 ├── config\
 ├── front\dist\
 ├── assets\
@@ -250,7 +240,7 @@ release\Paper-Agent++\
 双击：
 
 ```text
-release\Paper-Agent++\Paper-Agent++.exe
+release\Paper-Agent\Paper-Agent.exe
 ```
 
 程序会自动打开浏览器并使用：
@@ -266,7 +256,7 @@ http://127.0.0.1:8000
 ## 项目结构
 
 ```text
-Paper-Agent++/
+Paper-Agent/
 ├── main.py                         # 开发环境启动入口
 ├── packaging/                      # Windows exe 入口、spec 和打包脚本
 ├── config/
@@ -322,12 +312,6 @@ npm run front:build
 3. 不提交 API Key、数据库、日志、缓存和本地打包文件。
 4. 在 PR 中说明配置文件、数据库结构或用户界面的影响。
 
-## 原项目与致谢
-
-本项目基于原始项目 [Tswoen/Paper-Agent](https://github.com/Tswoen/Paper-Agent) 继续开发。
-
-特别感谢原项目贡献者 [@GreatZack](https://github.com/GreatZack) 的持续投入与核心贡献。
-
 ## License
 
-本项目采用 [MIT License](LICENSE)。
+当前仓库尚未声明开源许可证。公开发布前，建议根据项目实际授权方式添加 `LICENSE` 文件。

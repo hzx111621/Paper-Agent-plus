@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import html
 import json
 import re
+import shutil
 import uuid
 from pathlib import Path
 from typing import Any
@@ -83,6 +85,22 @@ def update_paper(repo: SQLiteSessionRepository, user_id: str, paper_id: str, pat
     """更新论文的重点、忽略、收藏、标签和笔记。"""
 
     return repo.update_user_paper(user_id, paper_id, patch)
+
+
+def delete_paper(repo: SQLiteSessionRepository, user_id: str, paper_id: str) -> JsonObject:
+    """删除资料库论文及其个人精读结果，历史会话仍然保留。"""
+
+    paper = repo.get_user_paper(user_id, paper_id)
+    if paper is None:
+        raise SessionError("论文不存在或已经删除。", 404)
+    # 中文说明：精读笔记按“用户编号 + 论文编号”单独保存，删除资料库记录时可以安全清掉。
+    # 公开全文缓存可能被其他历史会话复用，因此这里不直接删除，避免影响仍在使用它的记录。
+    folder_name = hashlib.sha256(f"{user_id}\n{paper_id}".encode()).hexdigest()
+    reading_dir = repo.backend.storage_root / "paper_reading" / folder_name
+    removed = repo.delete_user_paper(user_id, paper_id)
+    if reading_dir.exists():
+        shutil.rmtree(reading_dir, ignore_errors=True)
+    return {"deleted": removed, "paper_id": paper_id}
 
 
 def upload_pdf(

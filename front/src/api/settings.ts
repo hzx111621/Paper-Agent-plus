@@ -3,7 +3,6 @@ import type {
   ProviderModelsPayload,
   SettingsPayload,
 } from "../types/settings";
-import { authHeaders } from "./auth";
 
 type JsonObject = Record<string, unknown>;
 
@@ -11,7 +10,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     headers: {
       "Content-Type": "application/json",
-      ...authHeaders(),
       ...(init?.headers ?? {}),
     },
     ...init,

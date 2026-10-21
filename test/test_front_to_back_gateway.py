@@ -56,7 +56,7 @@ class FrontToBackFastApiTest(unittest.TestCase):
 
         settings = SettingsRepository(
             initial={
-                "providers": {"openai": {"api_key": "test-openai-key", "api_base": "https://api.openai.com/v1"}},
+                "providers": {"openai": {"api_key": "sk-test", "api_base": "https://api.openai.com/v1"}},
                 "agents": {"default_agent": {"model_name": "gpt-5-mini", "provider": "openai"}},
                 "embedding_profiles": {},
             }

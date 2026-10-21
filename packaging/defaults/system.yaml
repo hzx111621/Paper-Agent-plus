@@ -1,0 +1,25 @@
+# 发布版首次运行时使用的默认设置，不包含个人密钥或本机绝对路径。
+defaults:
+  llm:
+    temperature: 0.7
+    max_tokens: 4000
+    reasoning_effort: none
+    context_window_tokens: 64000
+  embedding:
+    batch_size: 32
+paper_retrieval:
+  openalex_api_key: null
+  semantic_scholar_api_key: null
+  ieee_xplore_api_key: null
+  elsevier_api_key: null
+read:
+  agent_name: default_agent
+  deep_read_limit: 10
+  paper_cache_dir: data/paper_cache
+  connect_timeout_seconds: 10
+  download_timeout_seconds: 60
+  max_file_size_mb: 50
+  chunk_size: 1200
+  chunk_overlap: 150
+  vector_store_path: data/vector_store
+  vector_store_collection: papers

@@ -93,3 +93,17 @@ logs/*
 
 # Local Windows packaging output
 release/
+
+# 本地发布副本和历史打包备份
+backups/
+Paper-Agent-PyCharm/
+Paper-Agent-PyCharm.zip
+github-upload/
+%SystemDrive%/
+
+# 本地开发记录与智能体工作说明
+AGENTS.md
+CLAUDE.md
+deliverable.md
+notes.md
+task_plan.md

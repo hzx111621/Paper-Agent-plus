@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from "vue";
+import ImageSummaryPicker from "./ImageSummaryPicker.vue";
 import {
   ChevronDown,
   FileText,
@@ -27,6 +28,7 @@ const props = withDefaults(
     placeholder?: string;
     rows?: number;
     constraints: SessionConstraints;
+    ensureSession: () => Promise<string>;
   }>(),
   {
     variant: "default",
@@ -59,6 +61,8 @@ interface SourceOption {
 }
 
 const isWelcomeVariant = computed(() => props.variant === "welcome");
+// 中文说明：首页的精读和一图总结共用论文选择器，避免在线搜索、本地上传和资料库选择做成两套流程。
+const pickerMode = ref<"reading" | "image" | null>(null);
 const constraintsExpanded = ref(false);
 const textareaElement = ref<HTMLTextAreaElement | null>(null);
 
@@ -159,8 +163,20 @@ function toggleSource(source: string, event: Event) {
 
 /** 切换是否额外按用户输入的原始文字检索同名论文。 */
 function setSearchMode(mode: "paper" | "topic") {
+  pickerMode.value = null;
   const next = { ...props.constraints, search_mode: mode, exact_title: mode === "paper" };
+  // 中文说明：关键词检索默认返回 20 篇，按题目检索固定返回最匹配的一篇。
+  if (mode === "topic" && (!Number.isInteger(Number(next.max_results)) || Number(next.max_results) < 1)) {
+    next.max_results = 20;
+  }
+  // 中文说明：切换模式后直接展开设置区，让关键词检索的返回数量可以立即编辑。
+  constraintsExpanded.value = true;
   emit("update:constraints", next);
+}
+
+/** 打开精读或一图总结时不清空已输入的检索内容，切回后用户仍能继续编辑。 */
+function setPickerMode(mode: "reading" | "image") {
+  pickerMode.value = mode;
 }
 
 /**
@@ -186,7 +202,7 @@ function onKeydown(event: KeyboardEvent) {
   <section class="session-composer-card" :data-variant="props.variant" :aria-busy="running || sending">
     <template v-if="isWelcomeVariant">
       <header class="session-welcome-heading">
-        <img class="session-welcome-wordmark" src="/university-wordmark-transparent.png" alt="华东理工大学校徽与校名" />
+        <img class="session-welcome-wordmark" src="/hohai-lab-transparent.png" alt="河海大学人工智能与多媒体安全实验室与校名" />
         <span class="session-welcome-badge"><Sparkles :size="15" />新建研究会话</span>
         <h2>
           {{ headingParts.before }}<strong v-if="headingParts.emphasis">{{ headingParts.emphasis }}</strong>{{ headingParts.after }}
@@ -196,10 +212,13 @@ function onKeydown(event: KeyboardEvent) {
 
       <div class="session-welcome-prompt-card">
         <div class="session-search-mode" role="group" aria-label="检索模式">
-          <button type="button" :class="{ active: constraints.search_mode !== 'topic' }" @click="setSearchMode('paper')">搜论文</button>
-          <button type="button" :class="{ active: constraints.search_mode === 'topic' }" @click="setSearchMode('topic')">搜主题关键词</button>
+          <button type="button" :class="{ active: !pickerMode && constraints.search_mode === 'topic' }" @click="setSearchMode('topic')">搜关键词</button>
+          <button type="button" :class="{ active: !pickerMode && constraints.search_mode !== 'topic' }" @click="setSearchMode('paper')">搜论文</button>
+          <button type="button" :class="{ active: pickerMode === 'reading' }" :disabled="running || sending" @click="setPickerMode('reading')">精读论文</button>
+          <button type="button" :class="{ active: pickerMode === 'image' }" :disabled="running || sending" @click="setPickerMode('image')">一图总结</button>
         </div>
-        <div class="session-welcome-input-row">
+        <ImageSummaryPicker v-if="pickerMode" :ensure-session="props.ensureSession" :mode="pickerMode" />
+        <div v-else class="session-welcome-input-row">
           <FileText class="session-welcome-input-icon" :size="24" aria-hidden="true" />
           <textarea
             ref="textareaElement"
@@ -226,7 +245,7 @@ function onKeydown(event: KeyboardEvent) {
           </button>
         </div>
 
-        <div v-if="constraintsExpanded" class="session-composer-constraints-panel session-welcome-constraints-panel">
+        <div v-if="!pickerMode && constraintsExpanded" class="session-composer-constraints-panel session-welcome-constraints-panel">
           <div class="session-composer-constraint-grid">
             <label class="session-composer-constraint-field">
               <span>最早年份</span>
@@ -236,9 +255,9 @@ function onKeydown(event: KeyboardEvent) {
               <span>最晚年份</span>
               <input class="field" type="number" min="1900" max="2100" placeholder="不限" :value="constraints.year_to ?? ''" :disabled="running || sending" @input="updateNumberConstraint('year_to', $event)" />
             </label>
-            <label class="session-composer-constraint-field">
-              <span>检索结果数</span>
-              <input class="field" type="number" min="1" max="200" placeholder="默认" :value="constraints.max_results ?? ''" :disabled="running || sending" @input="updateNumberConstraint('max_results', $event)" />
+            <label v-if="constraints.search_mode === 'topic'" class="session-composer-constraint-field">
+              <span>关键词最多返回多少篇</span>
+              <input class="field" type="number" min="1" max="200" placeholder="例如：20" :value="constraints.max_results ?? ''" :disabled="running || sending" @input="updateNumberConstraint('max_results', $event)" />
             </label>
             <label class="session-composer-constraint-field">
               <span>深度阅读数</span>
@@ -266,7 +285,7 @@ function onKeydown(event: KeyboardEvent) {
           </fieldset>
         </div>
 
-        <div class="session-welcome-quick-start">
+        <div v-if="!pickerMode" class="session-welcome-quick-start">
           <span class="session-welcome-quick-label"><Sparkles :size="17" />快捷开始</span>
           <button v-for="topic in quickTopics" :key="topic.label" class="session-welcome-topic-button" type="button" @click="applyPrompt(topic.prompt)">
             <FileText :size="14" />
@@ -285,15 +304,18 @@ function onKeydown(event: KeyboardEvent) {
         </div>
       </div>
 
-      <p class="session-welcome-inspiration"><Lightbulb :size="17" />不知道写什么？试试这些热门主题</p>
+      <p v-if="!pickerMode" class="session-welcome-inspiration"><Lightbulb :size="17" />不知道写什么？试试这些热门主题</p>
     </template>
 
     <template v-else>
       <div class="session-search-mode" role="group" aria-label="检索模式">
-        <button type="button" :class="{ active: constraints.search_mode !== 'topic' }" @click="setSearchMode('paper')">搜论文</button>
-        <button type="button" :class="{ active: constraints.search_mode === 'topic' }" @click="setSearchMode('topic')">搜主题关键词</button>
+        <button type="button" :class="{ active: !pickerMode && constraints.search_mode === 'topic' }" @click="setSearchMode('topic')">搜关键词</button>
+        <button type="button" :class="{ active: !pickerMode && constraints.search_mode !== 'topic' }" @click="setSearchMode('paper')">搜论文</button>
+        <button type="button" :class="{ active: pickerMode === 'reading' }" :disabled="running || sending" @click="setPickerMode('reading')">精读论文</button>
+        <button type="button" :class="{ active: pickerMode === 'image' }" :disabled="running || sending" @click="setPickerMode('image')">一图总结</button>
       </div>
-      <div class="session-composer-input-row">
+      <ImageSummaryPicker v-if="pickerMode" :ensure-session="props.ensureSession" :mode="pickerMode" />
+      <div v-else class="session-composer-input-row">
         <textarea
           class="session-composer-textarea"
           :value="modelValue"
@@ -318,7 +340,7 @@ function onKeydown(event: KeyboardEvent) {
         </button>
       </div>
 
-      <div class="session-composer-constraints">
+      <div v-if="!pickerMode" class="session-composer-constraints">
         <button class="session-composer-constraints-toggle" type="button" :aria-expanded="constraintsExpanded" @click="constraintsExpanded = !constraintsExpanded">
           <Filter :size="15" />
           <span>检索与阅读约束</span>
@@ -336,9 +358,9 @@ function onKeydown(event: KeyboardEvent) {
               <span>最晚年份</span>
               <input class="field" type="number" min="1900" max="2100" placeholder="不限" :value="constraints.year_to ?? ''" :disabled="running || sending" @input="updateNumberConstraint('year_to', $event)" />
             </label>
-            <label class="session-composer-constraint-field">
-              <span>检索结果数</span>
-              <input class="field" type="number" min="1" max="200" placeholder="默认" :value="constraints.max_results ?? ''" :disabled="running || sending" @input="updateNumberConstraint('max_results', $event)" />
+            <label v-if="constraints.search_mode === 'topic'" class="session-composer-constraint-field">
+              <span>关键词最多返回多少篇</span>
+              <input class="field" type="number" min="1" max="200" placeholder="例如：20" :value="constraints.max_results ?? ''" :disabled="running || sending" @input="updateNumberConstraint('max_results', $event)" />
             </label>
             <label class="session-composer-constraint-field">
               <span>深度阅读数</span>

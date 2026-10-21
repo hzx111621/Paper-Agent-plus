@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 
 from src.llm import ProviderSnapshot
+from src.agents.base import AgentContext
+from src.agents.chapterReadingAgent import ChapterReadingAgent
 from src.llm.base import LLMResponse
 from src.paper_retrieval.models import PaperDocument
 from src.utils.read_utils.chunkers import TextChunk, load_chunks_file
@@ -74,9 +76,15 @@ async def async_extract_paper_from_chunks(
     if not chunks:
         raise ValueError("chunk.json 中没有可用于全文提取的正文片段")
     output_path = chunks_path.parent / "extraction.json"
+    # 先完成用户指定的双阶段精读，再保留结构化提取，供后续分析和综述继续引用原文。
+    # 已完成的章节会从文件复用，中途中断后不必重新调用前面的轮次。
+    full_text = "\n\n".join(chunk.content for chunk in chunks)
+    chapter_agent = ChapterReadingAgent(AgentContext(spec=ChapterReadingAgent.spec, llm=llm))
+    chapter_record = await chapter_agent.read(full_text, chunks_path.parent / "chapter_reading.json", getattr(runtime_resources, "read_model_semaphore", None))
     valid_chunk_ids = {chunk.chunk_id for chunk in chunks}
     cached = await asyncio.to_thread(_load_cached_extraction, output_path, valid_chunk_ids)
     if cached is not None:
+        cached["chapter_reading"] = chapter_record["markdown"]
         return cached
     response = await _call_model(
         llm,
@@ -92,6 +100,7 @@ async def async_extract_paper_from_chunks(
     extraction = _validate_extraction(payload, valid_chunk_ids=valid_chunk_ids)
     record: JsonObject = {
         "schema_version": 2,
+        "chapter_reading": chapter_record["markdown"],
         "paperId": paper.paperId or paper.id,
         "schema": EXTRACTION_SCHEMA,
         "extraction": extraction,

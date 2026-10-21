@@ -25,6 +25,7 @@ import {
   testModelConnectivity,
 } from "../api/settings";
 import StatusPill from "../components/StatusPill.vue";
+import ImageGenerationSettings from "../components/ImageGenerationSettings.vue";
 import { pushToast } from "../stores/notifications";
 import type {
   AgentItem,
@@ -565,8 +566,10 @@ async function submitEmbedding() {
 function startCreatingAgent() {
   isCreatingAgent.value = true;
   editingAgentName.value = "";
-  agentDraft.name = "";
-  agentDraft.label = "";
+  // 首次配置需要 default_agent，先填好它的名字，用户只需选择自己的服务和模型。
+  const needsDefault = !agents.value.some((agent) => agent.name === "default_agent");
+  agentDraft.name = needsDefault ? "default_agent" : "";
+  agentDraft.label = needsDefault ? "默认阅读模型" : "";
   agentDraft.provider = providers.value[0]?.name ?? "";
   agentDraft.model_name = "";
   agentDraft.temperature = toInputString(settings.value?.defaults.llm.temperature ?? null);
@@ -898,6 +901,8 @@ function handleError(error: unknown, title: string) {
     </section>
 
     <template v-else-if="settings">
+      <div v-if="!settings.providers.length" class="editor-card"><h2>首次使用：配置你的模型服务</h2><p>先在下方添加 Provider，填写服务地址和 API Key，再为默认智能体选择文字模型。生图模型在“一图总结”中单独配置。</p></div>
+      <ImageGenerationSettings />
       <section class="metrics-grid">
         <article v-for="card in healthCards" :key="card.label" class="metric-card">
           <div class="metric-icon"><component :is="card.icon" :size="20" /></div>
@@ -1487,7 +1492,7 @@ function handleError(error: unknown, title: string) {
     </template>
 
     <footer class="page-footer">
-      <span>Minimal control surface for Paper-Agent++ runtime.</span>
+      <span>Minimal control surface for papers agents runtime.</span>
       <span>{{ currentYear() }}</span>
     </footer>
   </section>

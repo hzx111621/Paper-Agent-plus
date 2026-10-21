@@ -536,6 +536,7 @@ def _restore_read_results(state: State, papers: list[PaperDocument], checkpoint:
                 relevance=_read_relevance_from_payload(item.get("relevance")),
                 full_text=_full_text_from_payload(item.get("full_text")),
                 extraction=_json_object(item.get("extraction")),
+                chapter_reading=str(item.get("chapter_reading") or ""),
                 warnings=_string_list(item.get("warnings")),
             )
         )
@@ -666,6 +667,7 @@ def _read_result_from_payload(value: Any, papers: list[PaperDocument]) -> PaperR
         relevance=_read_relevance_from_payload(value.get("relevance")),
         full_text=_full_text_from_payload(value.get("full_text")),
         extraction=_json_object(value.get("extraction")),
+        chapter_reading=str(value.get("chapter_reading") or ""),
         warnings=_string_list(value.get("warnings")),
     )
 
@@ -1901,6 +1903,7 @@ async def _read_one_paper(
         result.warnings.append(f"全文结构化摘要生成失败：{exc}")
     else:
         result.extraction = extraction_payload(extraction_record)
+        result.chapter_reading = str(extraction_record.get("chapter_reading") or "")
         result.note = _full_text_note_from_extraction(result.extraction)
 
     if not ENABLE_FULL_TEXT_EMBEDDING:

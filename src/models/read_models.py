@@ -107,6 +107,8 @@ class PaperReadResult:
     relevance: ReadRelevance = field(default_factory=ReadRelevance)
     full_text: FullTextStatus = field(default_factory=FullTextStatus)
     extraction: JsonObject = field(default_factory=dict)
+    # 保存逐章精读正文，和供分析节点使用的六个结构化字段分开。
+    chapter_reading: str = ""
     warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> JsonObject:
@@ -118,5 +120,6 @@ class PaperReadResult:
             "relevance": self.relevance.to_dict(),
             "full_text": self.full_text.to_dict(),
             "extraction": dict(self.extraction),
+            "chapter_reading": self.chapter_reading,
             "warnings": list(self.warnings),
         }

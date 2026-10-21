@@ -6,7 +6,6 @@ import type {
   SessionRuntimeEvent,
   SessionThreadPayload,
 } from "../types/sessions";
-import { authHeaders } from "./auth";
 
 type JsonObject = Record<string, unknown>;
 
@@ -38,7 +37,6 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     headers: {
       "Content-Type": "application/json",
-      ...authHeaders(),
       ...(init?.headers ?? {}),
     },
     ...init,
@@ -111,8 +109,7 @@ export function subscribeSessionRun(
     onOpen?: () => void;
   },
 ): AuthenticatedEventStream {
-  // 中文说明：原生 EventSource 不能附加 Authorization 请求头，登录后会被后端拒绝。
-  // 这里改用 fetch 读取同样的 SSE 数据，并保留 close() 方法，调用页面不用改关闭逻辑。
+  // 中文说明：这里用 fetch 读取同样的 SSE 数据，并保留 close() 方法，调用页面不用改关闭逻辑。
   const controller = new AbortController();
   const stream = { close: () => controller.abort() };
 
@@ -130,10 +127,7 @@ async function readEventStream(
   },
 ): Promise<void> {
   try {
-    const response = await fetch(streamUrl, {
-      headers: authHeaders(),
-      signal,
-    });
+    const response = await fetch(streamUrl, { signal });
     if (!response.ok || !response.body) {
       throw new Error(`stream request failed: ${response.status}`);
     }

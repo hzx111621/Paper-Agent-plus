@@ -41,7 +41,17 @@ class ReadPersistenceSink:
             relative_path=f"artifacts/read/{self._turn_id}/papers/{paper_id}/note.json",
             metadata={"turn_id": self._turn_id, "paper_id": result.paper.id, "format": "json"},
         )
-        return ReadPersistenceResult(artifacts=[_artifact_ref(record)])
+        artifacts = [_artifact_ref(record)]
+        if result.chapter_reading:
+            # 精读笔记额外保存为 Markdown，用户可以直接从会话产物下载阅读。
+            reading = self._repo.write_artifact(
+                self._session_key, artifact_type="chapter_reading", name=f"{paper_id}_精读.md",
+                content=result.chapter_reading,
+                relative_path=f"artifacts/read/{self._turn_id}/papers/{paper_id}/chapter_reading.md",
+                metadata={"turn_id": self._turn_id, "paper_id": result.paper.id, "format": "markdown"},
+            )
+            artifacts.append(_artifact_ref(reading))
+        return ReadPersistenceResult(artifacts=artifacts)
 
     def persist_summary(self, summary: JsonObject, results: list[PaperReadResult]) -> ReadPersistenceResult:
         """写入一次阅读任务的汇总清单，便于后续节点快速了解整体处理情况。"""

@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import SessionWorkspaceView from "../views/SessionWorkspaceView.vue";
 import SystemSettingsView from "../views/SystemSettingsView.vue";
 import LibraryView from "../views/LibraryView.vue";
-import AccountSettingsView from "../views/AccountSettingsView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -23,7 +22,6 @@ const router = createRouter({
       component: SystemSettingsView,
     },
     { path: "/library", name: "library", component: LibraryView },
-    { path: "/account", name: "account", component: AccountSettingsView },
   ],
 });
 

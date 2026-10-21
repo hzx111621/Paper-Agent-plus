@@ -3,20 +3,17 @@ import {
   ChevronLeft,
   History,
   LoaderCircle,
-  LogOut,
   MessageSquareText,
   PanelsTopLeft,
   Plus,
   Trash2,
-  UserRound,
   Workflow,
   Library,
 } from "lucide-vue-next";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import { RouterLink, useRoute } from "vue-router";
 
 import type { SessionStatus, SessionSummary } from "../types/sessions";
-import type { AuthUser } from "../types/auth";
 
 const props = defineProps<{
   collapsed: boolean;
@@ -24,7 +21,6 @@ const props = defineProps<{
   selectedKey: string;
   loadingSessions: boolean;
   creatingSession: boolean;
-  currentUser: AuthUser;
 }>();
 
 const emit = defineEmits<{
@@ -34,11 +30,9 @@ const emit = defineEmits<{
   removeSession: [sessionKey: string];
   renameSession: [sessionKey: string];
   archiveSession: [sessionKey: string];
-  logout: [];
 }>();
 
 const route = useRoute();
-const userMenuOpen = ref(false);
 
 const groupedSessions = computed(() => {
   const groups = [
@@ -126,10 +120,10 @@ function statusLabel(status: SessionStatus) {
     <div class="sidebar-head">
       <div class="brand-lockup">
         <div class="brand-mark brand-mark-image">
-          <img src="/university-emblem.jpeg" alt="华东理工大学校徽" />
+          <img src="/hohai-app-icon.png" alt="河海大学人工智能与多媒体安全实验室标志" />
         </div>
         <div v-if="!collapsed" class="brand-copy">
-          <span class="eyebrow">Paper-Agent++</span>
+          <span class="eyebrow">Papers Agents</span>
           <strong>Console</strong>
         </div>
       </div>
@@ -167,10 +161,6 @@ function statusLabel(status: SessionStatus) {
         <span v-if="!collapsed">系统配置</span>
       </RouterLink>
 
-      <RouterLink class="nav-item" :class="{ active: route.name === 'account' }" to="/account">
-        <UserRound :size="18" />
-        <span v-if="!collapsed">账户与安全</span>
-      </RouterLink>
     </nav>
 
     <section class="sidebar-history" aria-label="历史会话">
@@ -286,26 +276,5 @@ function statusLabel(status: SessionStatus) {
       </template>
     </section>
 
-    <!-- 底部固定用户信息，给工作台保留一个稳定的个人入口。 -->
-    <div v-if="!collapsed" class="sidebar-user-wrap">
-      <button
-        class="sidebar-user"
-        type="button"
-        :aria-expanded="userMenuOpen"
-        aria-label="打开账户菜单"
-        @click="userMenuOpen = !userMenuOpen"
-      >
-      <span class="sidebar-user-avatar"><UserRound :size="16" /></span>
-      <span class="sidebar-user-copy"><strong>{{ currentUser.username }}</strong><small>本地账户</small></span>
-      <ChevronLeft class="sidebar-user-chevron" :size="14" />
-      </button>
-      <div v-if="userMenuOpen" class="sidebar-user-menu">
-        <div class="sidebar-user-menu-name">{{ currentUser.username }}</div>
-        <button type="button" @click="emit('logout'); userMenuOpen = false">
-          <LogOut :size="14" />
-          退出登录
-        </button>
-      </div>
-    </div>
   </aside>
 </template>

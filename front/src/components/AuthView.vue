@@ -45,9 +45,9 @@ function switchMode(nextMode: "login" | "register") {
   <main class="auth-page">
     <section class="auth-panel" aria-labelledby="auth-title">
       <div class="auth-brand">
-        <img src="/university-emblem.jpeg" alt="华东理工大学校徽" />
+        <img src="/hohai-app-icon.png" alt="河海大学人工智能与多媒体安全实验室标志" />
         <div>
-          <span class="eyebrow">Paper-Agent++</span>
+          <span class="eyebrow">Papers Agents</span>
           <strong>Research Workspace</strong>
         </div>
       </div>

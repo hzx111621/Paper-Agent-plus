@@ -160,7 +160,8 @@ def run_search_agent_node():
         # 这样阅读节点拿到的论文都更稳定，也能减少后面下载和阅读时的无效工作。
         searchable_papers = _filter_searchable_papers(raw_papers, exact_title=intent.topic if intent.exact_title else "")
         scored_papers = _score_papers(intent, searchable_papers)
-        max_results = max(1, intent.max_results)
+        # 中文说明：按题目检索只交付最匹配的一篇；关键词检索按用户填写的数量保留多个结果。
+        max_results = 1 if intent.search_mode == "paper" else max(1, intent.max_results)
         search_results = [item.paper for item in scored_papers[:max_results]]
         search_scores = [item.to_dict() for item in scored_papers]
         drop_stats = _build_drop_stats(raw_papers, searchable_papers)
@@ -391,6 +392,7 @@ async def _search_one_subtopic(
         keyword_expression=subtopic.keyword,
         source=source,
         sources=sources,
+        # 中文说明：关键词检索先向每个细分方向取得足够候选，再在上层统一排序并保留用户指定的篇数。
         limit=max(1, intent.max_results),
         year_from=intent.year_from,
         year_to=intent.year_to,
@@ -418,7 +420,8 @@ async def _search_exact_title(
         keyword_expression="",
         source=source,
         sources=sources,
-        limit=max(1, intent.max_results),
+        # 中文说明：完整题目只需要找最匹配的一篇，不要把相似题目混入结果列表。
+        limit=1,
         year_from=intent.year_from,
         year_to=intent.year_to,
         excluded_terms=intent.excluded_terms,
